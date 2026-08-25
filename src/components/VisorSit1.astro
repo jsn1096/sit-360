@@ -1,0 +1,407 @@
+---
+const plantaPrincipal = '/planta1-1.webp';
+
+// Assets temporales: se pueden cambiar sin modificar la navegacion.
+const salas = [
+  {
+    id: 'observacion-1',
+    label: 'Sala de observación',
+    panorama: '/sala-ob-1.webp',
+    x: 35,
+    y: 30,
+  },
+  {
+    id: 'simulacion-1',
+    label: 'Simulación de alta fidelidad',
+    panorama: '/simulacion-1.webp',
+    x: 48,
+    y: 25,
+  },
+  {
+    id: 'control',
+    label: 'Sala de control',
+    panorama: '/sala-control.webp',
+    x: 59,
+    y: 25,
+  },
+  {
+    id: 'simulacion-2',
+    label: 'Simulación de alta fidelidad',
+    panorama: '/simulacion-2.webp',
+    x: 72,
+    y: 25,
+  },
+  {
+    id: 'observacion-2',
+    label: 'Sala de observación',
+    panorama: '/sala-ob-2.webp',
+    x: 87,
+    y: 23,
+  },
+  {
+    id: 'debriefing',
+    label: 'Sala de debriefing',
+    panorama: '/sala-debriefing.webp',
+    x: 56,
+    y: 49,
+  },
+  {
+    id: 'laboratorio',
+    label: 'Laboratorio de destrezas',
+    panorama: '/lab-destrezas.webp',
+    x: 22,
+    y: 65,
+  },
+];
+---
+
+<div id="sit1-wrapper" class="sit1-wrapper">
+  <div class="sit1-topbar" aria-live="polite">
+    <span id="sit1-label">Planta principal</span>
+  </div>
+
+  <section id="sit1-plant" class="sit1-screen sit1-plant" aria-label="Planta principal">
+    <div class="sit1-plant-stage">
+      <img class="sit1-plant-image" src={plantaPrincipal} alt="Planta principal de SIT" />
+      {
+        salas.map((sala) => (
+          <button
+            class="sit1-hotspot"
+            type="button"
+            data-room={sala.id}
+            aria-label={`Visitar ${sala.label}`}
+            style={`left: ${sala.x}%; top: ${sala.y}%;`}
+          >
+            <span class="sit1-hotspot-dot" aria-hidden="true"></span>
+            <span class="sit1-hotspot-label">{sala.label}</span>
+          </button>
+        ))
+      }
+    </div>
+    <p class="sit1-hint">Selecciona una sala para comenzar el recorrido</p>
+  </section>
+
+  <section id="sit1-room" class="sit1-screen sit1-room" hidden aria-label="Recorrido de sala">
+    <div id="sit1-panorama" class="sit1-panorama"></div>
+    <div id="sit1-loader" class="sit1-loader" role="status" aria-live="polite" hidden>
+      Cargando sala...
+    </div>
+    <div class="sit1-room-actions">
+      <button id="sit1-back" class="sit1-action" type="button">Volver a la planta</button>
+      <button id="sit1-next" class="sit1-action sit1-action-primary" type="button">Siguiente sala</button>
+    </div>
+  </section>
+</div>
+
+<style>
+  .sit1-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    min-height: 520px;
+    overflow: hidden;
+    background: #20252b;
+    color: #fff;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  .sit1-screen {
+    position: absolute;
+    inset: 0;
+  }
+
+  .sit1-screen[hidden] {
+    display: none;
+  }
+
+  .sit1-topbar {
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    z-index: 20;
+    max-width: calc(100% - 32px);
+    padding: 9px 18px;
+    transform: translateX(-50%);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 30px;
+    background: rgba(0, 0, 0, 0.62);
+    font-size: 13px;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .sit1-plant {
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 16px;
+    padding: 72px 16px 24px;
+    overflow: auto;
+    background: #d6d2cd;
+  }
+
+  .sit1-plant-stage {
+    position: relative;
+    width: min(100%, 1500px);
+    line-height: 0;
+  }
+
+  .sit1-plant-image {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+    box-shadow: 0 16px 50px rgba(0, 0, 0, 0.25);
+  }
+
+  .sit1-hotspot {
+    position: absolute;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 7px;
+    max-width: 210px;
+    padding: 5px 9px 5px 5px;
+    transform: translate(-50%, -50%);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 20px;
+    background: #f2d500;
+    color: #171717;
+    cursor: pointer;
+    font: 600 12px/1.15 system-ui, sans-serif;
+    text-align: left;
+    transition: transform 0.15s ease, filter 0.15s ease;
+  }
+
+  .sit1-hotspot:hover,
+  .sit1-hotspot:focus-visible {
+    filter: brightness(1.08);
+    transform: translate(-50%, -50%) scale(1.04);
+  }
+
+  .sit1-hotspot:focus-visible,
+  .sit1-action:focus-visible {
+    outline: 3px solid #75c9ff;
+    outline-offset: 3px;
+  }
+
+  .sit1-hotspot-dot {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #171717;
+    border-radius: 50%;
+    background: #fff;
+  }
+
+  .sit1-hint {
+    margin: 0;
+    padding: 8px 14px;
+    border-radius: 20px;
+    background: rgba(0, 0, 0, 0.62);
+    font-size: 12px;
+  }
+
+  .sit1-panorama {
+    width: 100%;
+    height: 100%;
+  }
+
+  .sit1-loader {
+    position: absolute;
+    bottom: 86px;
+    left: 50%;
+    z-index: 20;
+    padding: 8px 16px;
+    transform: translateX(-50%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 30px;
+    background: rgba(0, 0, 0, 0.6);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 12px;
+  }
+
+  .sit1-room-actions {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    z-index: 20;
+    display: flex;
+    gap: 10px;
+    transform: translateX(-50%);
+  }
+
+  .sit1-action {
+    min-height: 38px;
+    padding: 9px 15px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 22px;
+    background: rgba(0, 0, 0, 0.68);
+    color: #fff;
+    cursor: pointer;
+    font: 600 12px system-ui, sans-serif;
+    white-space: nowrap;
+  }
+
+  .sit1-action:hover {
+    background: rgba(0, 0, 0, 0.85);
+  }
+
+  .sit1-action-primary {
+    border-color: transparent;
+    background: #f2d500;
+    color: #171717;
+  }
+
+  .sit1-action-primary:hover {
+    background: #ffe42b;
+  }
+
+  @media (max-width: 640px) {
+    .sit1-wrapper {
+      min-height: 440px;
+    }
+
+    .sit1-plant {
+      align-content: center;
+      padding: 66px 8px 16px;
+    }
+
+    .sit1-hotspot {
+      width: 30px;
+      height: 30px;
+      padding: 4px;
+      border-radius: 50%;
+    }
+
+    .sit1-hotspot-label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+
+    .sit1-hotspot-dot {
+      width: 18px;
+      height: 18px;
+    }
+
+    .sit1-room-actions {
+      right: 12px;
+      left: 12px;
+      justify-content: center;
+      transform: none;
+    }
+
+    .sit1-action {
+      flex: 1;
+      padding-right: 10px;
+      padding-left: 10px;
+    }
+  }
+</style>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css" />
+<script is:inline src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
+
+<script define:vars={{ salas }}>
+  let visor = null;
+  let salaActual = salas[0].id;
+
+  const planta = document.getElementById('sit1-plant');
+  const salaView = document.getElementById('sit1-room');
+  const etiqueta = document.getElementById('sit1-label');
+  const loader = document.getElementById('sit1-loader');
+  const siguiente = document.getElementById('sit1-next');
+
+  const obtenerSala = (id) => salas.find((sala) => sala.id === id);
+
+  const actualizarEtiqueta = (id) => {
+    const sala = obtenerSala(id);
+    if (etiqueta && sala) etiqueta.textContent = sala.label;
+  };
+
+  const mostrarLoader = () => {
+    if (loader) loader.hidden = false;
+  };
+
+  const ocultarLoader = () => {
+    if (loader) loader.hidden = true;
+  };
+
+  const crearVisor = (escenaInicial) => {
+    if (visor || typeof pannellum === 'undefined') {
+      if (!visor) setTimeout(() => crearVisor(escenaInicial), 50);
+      return;
+    }
+
+    const escenas = {};
+    salas.forEach((sala) => {
+      escenas[sala.id] = {
+        type: 'equirectangular',
+        panorama: sala.panorama,
+        hotSpots: [],
+      };
+    });
+
+    visor = pannellum.viewer('sit1-panorama', {
+      default: {
+        firstScene: escenaInicial,
+        sceneFadeDuration: 700,
+        autoLoad: true,
+        showControls: true,
+        autoRotate: 0,
+      },
+      scenes: escenas,
+    });
+
+    visor.on('scenechange', (escenaId) => {
+      salaActual = escenaId;
+      actualizarEtiqueta(escenaId);
+      mostrarLoader();
+    });
+
+    visor.on('load', ocultarLoader);
+  };
+
+  const abrirSala = (id) => {
+    const sala = obtenerSala(id);
+    if (!sala || !planta || !salaView) return;
+
+    salaActual = id;
+    planta.hidden = true;
+    salaView.hidden = false;
+    actualizarEtiqueta(id);
+    mostrarLoader();
+
+    if (!visor) {
+      requestAnimationFrame(() => crearVisor(id));
+      return;
+    }
+
+    visor.loadScene(id);
+    requestAnimationFrame(() => visor.resize());
+  };
+
+  const volverAPlanta = () => {
+    if (!planta || !salaView) return;
+    salaView.hidden = true;
+    planta.hidden = false;
+    ocultarLoader();
+    if (etiqueta) etiqueta.textContent = 'Planta principal';
+  };
+
+  const abrirSiguienteSala = () => {
+    const indiceActual = salas.findIndex((sala) => sala.id === salaActual);
+    const siguienteSala = salas[(indiceActual + 1) % salas.length];
+    if (siguienteSala) abrirSala(siguienteSala.id);
+  };
+
+  document.querySelectorAll('[data-room]').forEach((boton) => {
+    boton.addEventListener('click', () => abrirSala(boton.dataset.room));
+  });
+
+  document.getElementById('sit1-back')?.addEventListener('click', volverAPlanta);
+  siguiente?.addEventListener('click', abrirSiguienteSala);
+</script>
